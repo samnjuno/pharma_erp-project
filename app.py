@@ -62,3 +62,40 @@ def logout():
 def dashboard():
     return render_template('dashboard.html')
 
+# Add Product Route
+@app.route('/add_product', methods=['GET', 'POST'])
+@login_required
+def add_product():
+    if request.method == 'POST':
+        name = request.form['name']
+        stock = int(request.form['stock'])
+        price = float(request.form['price'])
+        
+        # Create a new product object
+        new_product = Product(name=name, stock=stock, price=price)
+        
+        # Add and commit the new product to the database
+        db.session.add(new_product)
+        db.session.commit()
+        
+        flash('Product added successfully!', 'success')
+        return redirect(url_for('view_products'))
+    
+    return render_template('add_product.html')
+
+# View Products Route
+@app.route('/products')
+@login_required
+def view_products():
+    products = Product.query.all()  # Query all products from the database
+    return render_template('products.html', products=products)
+
+# Delete Product Route
+@app.route('/delete_product/<int:id>', methods=['GET'])
+@login_required
+def delete_product(id):
+    product = Product.query.get_or_404(id)  # Fetch product by ID or return 404 if not found
+    db.session.delete(product)  # Delete the product from the database
+    db.session.commit()  # Commit the changes to the database
+    flash('Product deleted successfully!', 'danger')
+    return redirect(url_for('view_products'))  # Redirect to product list page
